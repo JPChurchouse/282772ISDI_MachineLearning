@@ -76,10 +76,15 @@ def CreateModel():
     return
 
 
+
 def Clasify():
     mymodel = load_model(filepath_model)
+    incorrect = 0
+    count = 0
 
     for file in os.listdir(directory_testimages):
+        count += 1
+        if count % 50 == 0: print(count)
         
         path = os.path.join(directory_testimages, file)
         img = cv2.imread(path, cv2.IMREAD_COLOR)
@@ -88,20 +93,27 @@ def Clasify():
         res = mymodel.predict(np.expand_dims(resize/255, 0))
 
         passed = res > 0.5
-        col = (0,255,0) if passed else (0,0,255)
+        colour_back = (0,255,0) if passed else (0,0,255)
+        colour_fore = (0,0,0) if passed else (255,255,255)
         msg = "PASS" if passed else "FAIL"
-        cv2.rectangle(img, (0,0), (300,40), (255,255,255), cv2.FILLED)
-        cv2.putText(img, msg, (1,30), cv2.FONT_HERSHEY_SIMPLEX, 1, col, 2)
+
+        cv2.rectangle(img, (0,0), (100,40), colour_back, cv2.FILLED)
+        cv2.putText(img, msg, (1,30), cv2.FONT_HERSHEY_SIMPLEX, 1, colour_fore, 2)
         
         cv2.imwrite(os.path.join(directory_output,file), img)
 
+        number = int(file.replace(".PNG",""))
+        is_pass = number > 400
+        if passed != is_pass: incorrect += 1
+
+    print(f"Number of incorrect classifications: {incorrect}")
     return
 
 
 def main():
     print("Start")
     
-    CreateModel()
+    #CreateModel()
     Clasify()
 
     print("End")
