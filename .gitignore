@@ -32,3 +32,5 @@
 *.app
 *.zip
 *.png
+model/model
+model

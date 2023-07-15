@@ -8,96 +8,102 @@ import os
 import sys
 import random
 
-import tensorflow.python as tf
+import tensorflow as tf
+from tensorflow.keras.metrics import Precision, Recall, BinaryAccuracy
+from tensorflow.keras.models import Sequential, load_model
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten
 
-import numpy as np
-from matplotlib import pyplot as plt
+directory_trainingdata = os.path.join(os.getcwd(),"data")
+directory_testimages = os.path.join(os.getcwd(),"images")
+directory_output = os.path.join(os.getcwd(),"out")
+directory_model = os.path.join(os.getcwd(),"model")
 
-def getPath(dir, name = "",type = "png"):
-    cwd = os.getcwd()
-    path = os.path.join(cwd,dir)
-    if name != "":
-        path = os.path.join(path,f"{name}.{type}")
-    return path
+if not os.path.exists(directory_output): os.makedirs(directory_output)
+if not os.path.exists(directory_model): os.makedirs(directory_model)
 
-
-def InitData():
-
-    cwd = os.getcwd()
-    directory_raw = os.path.join(cwd,"images")
-    
-    directory_test = os.path.join(cwd,'testing')
-    if not os.path.exists(directory_test): os.makedirs(directory_test)
-    
-
-    directory_train = os.path.join(cwd,'training')
-    directory_fail = os.path.join(directory_train,'fail')
-    directory_pass = os.path.join(directory_train,'pass')
-    if not os.path.exists(directory_train): os.makedirs(directory_train)
-    if not os.path.exists(directory_fail): os.makedirs(directory_fail)
-    if not os.path.exists(directory_pass): os.makedirs(directory_pass)
-    
-    for type in range(3):           # For each type - 0: fail1, 1: fail2, 3: pass
-        train = directory_fail if type < 2 else directory_pass
-
-        for block in range (10):    # For each block of 20 images in the 200 images of each type
-            rand = random.randint(1,20)
-
-            for index in range (0,20):
-                name = type*200 + block*20 + index + 1
-                
-
-                path = os.path.join(directory_raw, f"{name}.png")
-                img = cv2.imread(path, cv2.IMREAD_COLOR)
-                
-                dir = train
-                if index == rand: 
-                    dir = directory_test
-
-                print(f"Processing: {name}")
-                    
-                dir = os.path.join(dir,f"{name}.png")
-                
-                cv2.imwrite(dir, img)
-
-    return
+filename_model = "mymodel.keras"
+filepath_model = os.path.join(directory_model,"model")
 
 
-def cheat():
-    for i in range(8):
-        rand = random.randint(1,600)
-        print(rand)
-        col = (0,255,0) if rand > 400 else (0,0,255)
-        msg = "PASS" if rand > 400 else "FAIL"
-        
-        path = getPath("images",rand)
-        assert path is not None, "Image not found"
-        print (path)
+def CreateModel():
 
-        img = cv2.imread(path, cv2.IMREAD_COLOR)
-
-        cv2.rectangle(img, (0,0), (100,40),(0,0,0),cv2.FILLED)        # Background of count
-        cv2.putText(img,msg,(1,30), cv2.FONT_HERSHEY_SIMPLEX,1,col,2)
-        
-        cv2.imshow(path, img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-
-
-def runLearning():
-    data = tf.keras.utils.image_dataset_from_directory('images')
+    # INITALISE DATA
+    data = tf.keras.utils.image_dataset_from_directory(directory_trainingdata)
     data_iterator = data.as_numpy_iterator()
     batch = data_iterator.next()
+    data = data.map(lambda x,y: (x/255, y))
+    data.as_numpy_iterator().next()
+    train_size = int(len(data)*.7)
+    val_size = int(len(data)*.2)+1
+    test_size = int(len(data)*.1)+1
+    train = data.take(train_size)
+    val = data.skip(train_size).take(val_size)
+    test = data.skip(train_size+val_size).take(test_size)
+
+    # CREATE MODEL
+    model = Sequential()
+    model.add(Conv2D(16, (3,3), 1, activation='relu', input_shape=(256,256,3)))
+    model.add(MaxPooling2D())
+    model.add(Conv2D(32, (3,3), 1, activation='relu'))
+    model.add(MaxPooling2D())
+    model.add(Conv2D(16, (3,3), 1, activation='relu'))
+    model.add(MaxPooling2D())
+    model.add(Flatten())
+    model.add(Dense(256, activation='relu'))
+    model.add(Dense(1, activation='sigmoid'))
+    model.compile('adam', loss=tf.losses.BinaryCrossentropy(), metrics=['accuracy'])
+    model.summary()
+
+    # FIT MODEL
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=directory_model)
+    hist = model.fit(train, epochs=20, validation_data=val, callbacks=[tensorboard_callback])
+
+    # MODEL STATS
+    pre = Precision()
+    re = Recall()
+    acc = BinaryAccuracy()
+    for batch in test.as_numpy_iterator(): 
+        X, y = batch
+        yhat = model.predict(X)
+        pre.update_state(y, yhat)
+        re.update_state(y, yhat)
+        acc.update_state(y, yhat)
+    print(pre.result(), re.result(), acc.result())
+
+    # SAVE MODEL
+    model.save(filepath_model)
+
     return
 
 
+def Clasify():
+    mymodel = load_model(filepath_model)
+
+    for file in os.listdir(directory_testimages):
+        
+        path = os.path.join(directory_testimages, file)
+        img = cv2.imread(path, cv2.IMREAD_COLOR)
+
+        resize = tf.image.resize(img, (256,256))
+        res = mymodel.predict(np.expand_dims(resize/255, 0))
+
+        passed = res > 0.5
+        col = (0,255,0) if passed else (0,0,255)
+        msg = "PASS" if passed else "FAIL"
+        cv2.rectangle(img, (0,0), (300,40), (255,255,255), cv2.FILLED)
+        cv2.putText(img, msg, (1,30), cv2.FONT_HERSHEY_SIMPLEX, 1, col, 2)
+        
+        cv2.imwrite(os.path.join(directory_output,file), img)
+
+    return
 
 
 def main():
     print("Start")
-    #cheat()
-    #InitData()
+    
+    CreateModel()
+    Clasify()
+
     print("End")
 
     return 0
