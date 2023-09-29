@@ -30,6 +30,7 @@ def BuildModel(
     dir_train,
     dir_model,
     dir_tboard,
+    img_size,
     name_model,
     name_data = "data",
     name_labels = "labels"
@@ -39,7 +40,7 @@ def BuildModel(
   try:
 
     timenow = int(time.time() * 1000)
-    name_this = name_model + "_" + str(timenow)
+    name_this = name_model + "_" #+ str(timenow)
     print("This model's name is \"%s\"\n" %name_this)
 
     path = os.path.join(dir_tboard, name_this)
@@ -63,21 +64,10 @@ def BuildModel(
 
     #
     model =  Sequential()
-
-    model.add(Conv2D(64, (3,3), input_shape = data.shape[1:]))
-    model.add(Activation("relu"))
-    model.add(MaxPooling2D(pool_size=(2,2)))
-
-    model.add(Conv2D(64, (3,3)))
-    model.add(Activation("relu"))
-    model.add(MaxPooling2D(pool_size=(2,2)))
-
-    model.add(Flatten())
-    model.add(Dense(64))
-    model.add(Activation("relu"))
-
-    model.add(Dense(num_categories))
-    model.add(Activation("sigmoid"))
+    shape = (img_size,img_size,1) # H * W * channels
+    model.add(Dense(32, input_shape=shape, activation = 'relu')) # Rectified Linear Unit Activation Function
+    model.add(Dense(32, activation = 'relu'))
+    model.add(Dense(num_categories,activation="softmax"))
 
     model.compile(
       loss = "categorical_crossentropy",
@@ -88,9 +78,9 @@ def BuildModel(
     model.fit(
       data,
       labels,
-      batch_size = 30,
-      validation_split = 0.1,
-      epochs = 20,
+      batch_size = 20,
+      validation_split = 0.2,
+      epochs = 10,
       callbacks = [tensorboard]
       )
     

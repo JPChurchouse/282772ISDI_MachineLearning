@@ -104,10 +104,10 @@ def main():
   CheckDirectories()
 
   categories = ImportCategories()
-  LaunchTensorBoard(dir_tboard)
+  #LaunchTensorBoard(dir_tboard)
   #Create.CreateTrainingData(dir_raw,dir_train,img_size)
   name_model = "asdf"
-  name_model = Train.BuildModel(dir_train,dir_model,dir_tboard,name_model)
+  name_model = Train.BuildModel(dir_train,dir_model,dir_tboard,img_size,name_model)
 
 
 
