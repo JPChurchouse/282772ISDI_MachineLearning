@@ -1,14 +1,24 @@
+# INFO
+# Jamie Churchouse, 20007137
+# Massey University, Palmerston North, NZ
+# 282772 Industrial Systems Design and Integration
+# Machine Learning Project, 2023-10-06 1800
+# 
+# adsfadsfasfd
+
+
+# NOTES
 # https://www.youtube.com/watch?v=jztwpsIzEGc
 # https://github.com/nicknochnack/ImageClassification/blob/main/Getting%20Started.ipynb
 
-# IMPORT
 
-# Functions
+# EXTERNAL FUNCTIONS
 import CreateTrainingData as Create
 import Classify as Classify
 import TrainModel as Train
 
-# Libraries
+
+# LIBRARIES
 import cv2
 import numpy as np
 import os
@@ -22,17 +32,19 @@ import subprocess
 
 
 # DIRECTORIES & FILEPATHS
-dir_raw     = os.path.join(os.getcwd(),"raw_data")
-dir_train   = os.path.join(os.getcwd(),"training_data")
-dir_model   = os.path.join(os.getcwd(),"models")
-dir_tboard  = os.path.join(os.getcwd(),"tensor_board")
-dir_test    = os.path.join(os.getcwd(),"master_images")
-dir_output  = os.path.join(os.getcwd(),"classified_images")
+dir_cwd     = os.getcwd()
+dir_raw     = os.path.join(dir_cwd,"raw_data")
+dir_train   = os.path.join(dir_cwd,"training_data")
+dir_model   = os.path.join(dir_cwd,"models")
+dir_tboard  = os.path.join(dir_cwd,"tensor_board")
+dir_test    = os.path.join(dir_cwd,"master_images")
+dir_output  = os.path.join(dir_cwd,"classified_images")
 
 dirs_cre = [dir_model,dir_train,dir_tboard,dir_output]
 dirs_req = [dir_raw,dir_test]
 
-def CheckDirectories(clear = False):
+# Function to verify directory integrities
+def CheckDirectories():
 
   fail = False
 
@@ -71,22 +83,35 @@ def LaunchTensorBoard(dir_tboard):
 
 
 
+def ImportCategories(name_categs = "categs"):
+  try:
+    path = os.path.join(os.getcwd(),"%s.pickle" % name_categs)
+    pickle_in = open(path, "rb")
+    categories = np.array(pickle.load(pickle_in))
+    pickle_in.close()
+    return categories
+  except:
+    return ["A","B","C","D"]
+
+
+
 
 # MAIN
 def main():
 
   print("Starting MAIN\n")
-  ret = 0
 
   CheckDirectories()
 
-  #ret = Create.CreateTrainingData(dir_raw,dir_train,img_size)
-  if not ret == 0 : return ret
-
-  ret = Train.BuildModel(dir_train,dir_model,dir_tboard,name_model)
-  if not ret == 0 : return ret
-
+  categories = ImportCategories()
   LaunchTensorBoard(dir_tboard)
+  #Create.CreateTrainingData(dir_raw,dir_train,img_size)
+  name_model = "asdf"
+  name_model = Train.BuildModel(dir_train,dir_model,dir_tboard,name_model)
+
+
+
+  Classify.ClasifyAll(name_model,dir_model,img_size,categories,dir_test,dir_output)
 
   print("Concluding MAIN")
 
@@ -95,3 +120,6 @@ def main():
 print("\n\n")
 if __name__ == "__main__":
   sys.exit(main())
+
+
+

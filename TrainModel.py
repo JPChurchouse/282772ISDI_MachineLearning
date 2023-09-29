@@ -1,3 +1,13 @@
+# INFO
+# Jamie Churchouse, 20007137
+# Massey University, Palmerston North, NZ
+# 282772 Industrial Systems Design and Integration
+# Machine Learning Project, 2023-10-06 1800
+# 
+# This file holds the function to train the model
+
+
+# LIBRARIES
 import cv2
 import numpy as np
 import os
@@ -7,16 +17,11 @@ import time
 from tqdm import tqdm
 import pickle
 
-
-
 import tensorflow as tf
 from tensorflow.keras.metrics   import Precision, Recall, BinaryAccuracy
 from tensorflow.keras.models  import Sequential, load_model
 from tensorflow.keras.layers  import Conv2D, MaxPooling2D, Dense, Flatten, Activation
 from tensorflow.keras.callbacks import TensorBoard
-
-
-err_master = "An error occured while creating the model"
 
 
 
@@ -57,8 +62,6 @@ def BuildModel(
     print("Number of categories detected: %d"%num_categories)
 
     #
-    
-
     model =  Sequential()
 
     model.add(Conv2D(64, (3,3), input_shape = data.shape[1:]))
@@ -77,7 +80,7 @@ def BuildModel(
     model.add(Activation("sigmoid"))
 
     model.compile(
-      loss = "sparse_categorical_crossentropy",
+      loss = "categorical_crossentropy",
       optimizer = "adam",
       metrics = ["accuracy"]
       )
@@ -96,10 +99,9 @@ def BuildModel(
 
   #
   except Exception as exc:
-    print(err_master + "\n" + str(exc))
-    return -1
+    print("An error occured while creating the model" + "\n" + str(exc))
+    raise exc
+    return
 
   print("Concluded \"BuildModel()\"\n")
-  return 0
-
-
+  return name_this
