@@ -1,4 +1,5 @@
 # INFO
+
 # Jamie Churchouse, 20007137
 # Massey University, Palmerston North, NZ
 # 282772 Industrial Systems Design and Integration
@@ -7,85 +8,89 @@
 # adsfadsfasfd
 
 
-# NOTES
+# Notes
 # https://www.youtube.com/watch?v=jztwpsIzEGc
 # https://github.com/nicknochnack/ImageClassification/blob/main/Getting%20Started.ipynb
 
 
 # EXTERNAL FUNCTIONS
+
 import CreateTrainingData as Create
-import Classify as Classify
+import Classify as Classify # wow! original!
 import TrainModel as Train
+import Directories as Dir
+import TensorBoard as TB
 
 
 # LIBRARIES
-import cv2
+
 import numpy as np
 import os
 import sys
-import random
-import time
-from tqdm import tqdm
 import pickle
-import webbrowser
-import subprocess
+from tqdm import tqdm
 
 
-# DIRECTORIES & FILEPATHS
-dir_cwd     = os.getcwd()
-dir_raw     = os.path.join(dir_cwd,"raw_data")
-dir_train   = os.path.join(dir_cwd,"training_data")
-dir_model   = os.path.join(dir_cwd,"models")
-dir_tboard  = os.path.join(dir_cwd,"tensor_board")
-dir_test    = os.path.join(dir_cwd,"master_images")
-dir_output  = os.path.join(dir_cwd,"classified_images")
+# TESTING PARAMETERS
 
-dirs_cre = [dir_model,dir_train,dir_tboard,dir_output]
-dirs_req = [dir_raw,dir_test]
+# Test parameters
+test_layers = [  2,  3,  4]
+test_imsize = [ 32, 64,128]
+test_neuros = [ 16, 32, 64]
+test_epochs = [ 10, 15, 20]
 
-# Function to verify directory integrities
-def CheckDirectories():
+# Generate name from parameters
+def GenName(L,I,N,E):
+  return f"L{L}I{I}N{N}E{E}"
 
-  fail = False
+# Run all tests
+def RunTests():
 
-  for dir in dirs_cre:
-    if not os.path.exists(dir):
-      os.makedirs(dir)
-      print("Created output directory:\n%s\n" %dir)
-  
-  for dir in dirs_req:
-    if not os.path.exists(dir):
-      print("Missing input directory:\n%s\n" %dir)
-      fail = True
+  model_names = []
+  params = {}
 
-  if fail: raise Exception("Unable to continue - one or more required input directories are missing")
+  # Verify directory integrity
+  Dir.Verify()
 
-  return
+  # Create the training data
+  #for size in tqdm(test_imsize) : Create.CreateTrainingData(size)
 
-name_model = "namething"
+  # Launch Tensorboard
+  TB.Launch()
 
-img_size = 50
+  # Run through each parameter
+  for L in test_layers:
+    for I in test_imsize:
+      for N in test_neuros:
+        for E in test_epochs:
+
+          name = GenName (L,I,N,E)
+          params ["layers"] = L
+          params ["imsize"] = I
+          params ["neuros"] = N
+          params ["epochs"] = E
+          params [ "name" ] = name
+
+          print(f"\nNow processing: {name}\n")
+
+          model_names.append(Train.BuildModel(params))
+
+          print(f"\nCompleted processing: {name}\n")
+
+  # Conclude
+  print(f"Testing complete\nModel names are as follows:")
+  for name in model_names: print(name)
+  print(f"Directory:\n{Dir.model}")
+  print("\nDONE")
 
 
-# TensorBoard launch function
-def LaunchTensorBoard(dir_tboard):
 
-  print("Launching TensorBoard")
+# FUNCTIONS
 
-  cmd = "(cd %s && tensorboard --logdir=%s/)" % (dir_tboard, dir_tboard)
-  subprocess.Popen(cmd, shell = True)
-
-  url = "http://localhost:6006/?darkMode=true"
-  webbrowser.open(url)
-
-  print("TensorBoard launch complete\n")
-  return
-
-
-
+# Function to import category names from a file
 def ImportCategories(name_categs = "categs"):
   try:
-    path = os.path.join(os.getcwd(),"%s.pickle" % name_categs)
+    path = os.path.join(os.getcwd(),f"{name_categs}.pickle")
     pickle_in = open(path, "rb")
     categories = np.array(pickle.load(pickle_in))
     pickle_in.close()
@@ -94,32 +99,34 @@ def ImportCategories(name_categs = "categs"):
     return ["A","B","C","D"]
 
 
-
-
 # MAIN
 def main():
 
   print("Starting MAIN\n")
 
-  CheckDirectories()
+  # Run sequential testing
+  RunTests()
 
-  categories = ImportCategories()
-  #LaunchTensorBoard(dir_tboard)
-  #Create.CreateTrainingData(dir_raw,dir_train,img_size)
-  name_model = "asdf"
-  name_model = Train.BuildModel(dir_train,dir_model,dir_tboard,img_size,name_model)
+  # Verify directories
+  #Dir.Verify()
 
+  # Launch TensorBoard
+  #TB.Launch(Dir.tboard)
 
+  # Create training data
+  #Create.CreateTrainingData(params)
 
-  Classify.ClasifyAll(name_model,dir_model,img_size,categories,dir_test,dir_output)
+  # Build and train model
+  #name_model = Train.BuildModel(params)
 
-  print("Concluding MAIN")
+  # Classify images with model // NOT OPERATIONAL //
+  #Classify.ClasifyAll(params)
+
+  print("Concluding MAIN\n")
 
   return 0
 
+# OS functionality
 print("\n\n")
 if __name__ == "__main__":
   sys.exit(main())
-
-
-

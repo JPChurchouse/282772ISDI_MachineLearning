@@ -6,6 +6,7 @@
 # 
 # This file holds the function to create training data
 
+import Directories as Dir
 
 # LIBRARIES
 import cv2
@@ -21,39 +22,40 @@ import pickle
 # MAIN FUNCTION
 
 # Create a set of training data
-def CreateTrainingData(
-    dir_raw,
-    dir_train,
-    img_size = 50,
-    name_data = "data",
-    name_labels = "labels",
-    name_categs = "categs"
-    ):
-  
+def CreateTrainingData(imsize):
   print("Starting \"CreateTrainingData()\"\n")
+
   try:
 
+    # SEARCH FOR DATA
+
+    # Init training data
     train_data = []
 
-    categories = SearchCategories(dir_raw,name_categs)
+    # Search for categs
+    categories = SearchCategories()
 
-    #
+    # Work through each category
     for category in tqdm(categories):
 
-      #
-      path = os.path.join(dir_raw,category)
+      # Init categ
+      path = os.path.join(Dir.categ,category)
       classid = categories.index(category)
 
-      #
+      # For each image in this categ
       for image in tqdm(os.listdir(path)):
 
-        #
-        img = PrepImage(os.path.join(path,image), img_size)
+        # Prepare and include image
+        img = PrepImage(os.path.join(path,image), imsize)
         train_data.append([img, classid])
 
-    #
+
+    # PROCESS DATA
+
+    # Shuffle the data
     random.shuffle(train_data)
 
+    # Post process data
     data = []
     labels = []
 
@@ -61,25 +63,31 @@ def CreateTrainingData(
       data.append(d)
       labels.append(l)
 
-    data = np.array(data).reshape(-1, img_size, img_size, 1)
+    data = np.array(data).reshape(-1, imsize, imsize, 1)
 
-    #
-    path = os.path.join(dir_train, name_data) + ".pickle"
+
+    # EXPORT
+
+    # Export data
+    path = os.path.join(Dir.train, Dir.name_data) + f"{imsize}.pickle"
     pickle_out = open(path, "wb")
     pickle.dump(data, pickle_out)
     pickle_out.close()
 
-    path = os.path.join(dir_train, name_labels) + ".pickle"
+    # Export labels
+    path = os.path.join(Dir.train, Dir.name_labels) + f"{imsize}.pickle"
     pickle_out = open(path, "wb")
     pickle.dump(labels, pickle_out)
     pickle_out.close()
 
-  #
+
+  # EXCEPTION HANDLING
   except Exception as exc:
     print("An error occured while creating the data\n" + str(exc))
     raise exc
     return
 
+  # CONCLUDE
   print("Completed \"CreateTrainingData()\"\n")
   return categories
 
@@ -87,18 +95,17 @@ def CreateTrainingData(
 # HELPER FUNCTIONS
 
 # Get the categories from the data directory
-def SearchCategories(dir, name_categs = "categs"):
-
+def SearchCategories():
   print("Searching for categories")
 
   categories = []
 
   # For each thing in the given directory
-  for thing in tqdm(os.listdir(dir)):
-    print("Found: %s" %thing)
+  for thing in tqdm(os.listdir(Dir.categ)):
+    print(f"Found: {thing}")
 
     # If the thing is a directory, add it as a category
-    if os.path.isdir(os.path.join(dir,thing)):
+    if os.path.isdir(os.path.join(Dir.categ,thing)):
       categories.append(thing)
 
   print("Category search complete\n")
@@ -106,7 +113,7 @@ def SearchCategories(dir, name_categs = "categs"):
   # If there are categories, return them
   if categories:
 
-    path = os.path.join(os.getcwd(), "%s.pickle" % name_categs)
+    path = os.path.join(os.getcwd(), f"{Dir.name_categs}.pickle")
     pickle_out = open(path, "wb")
     pickle.dump(categories, pickle_out)
     pickle_out.close()

@@ -27,6 +27,10 @@ dirs_required  = [categ,raw]
 dirs_to_create = [model,train,tboard,output]
 
 
+name_data   = "data"
+name_labels = "labels"
+name_categs = "categs"
+
 
 # FUNCTIONS
 

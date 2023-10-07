@@ -3,14 +3,22 @@
 # Massey University, Palmerston North, NZ
 # 282772 Industrial Systems Design and Integration
 # Machine Learning Project, 2023-10-06 1800
-# 
+#
+# This file contains functionality to classify the images
 
-# EXTERNAL FUNCTIONS
 
+#█▄─▀█▄─▄█─▄▄─█─▄─▄─███▄─▄█▄─▀█▀─▄█▄─▄▄─█▄─▄███▄─▄▄─█▄─▀█▀─▄█▄─▄▄─█▄─▀█▄─▄█─▄─▄─█▄─▄▄─█▄─▄▄▀█
+#██─█▄▀─██─██─███─██████─███─█▄█─███─▄▄▄██─██▀██─▄█▀██─█▄█─███─▄█▀██─█▄▀─████─████─▄█▀██─██─█
+#▀▄▄▄▀▀▄▄▀▄▄▄▄▀▀▄▄▄▀▀▀▀▄▄▄▀▄▄▄▀▄▄▄▀▄▄▄▀▀▀▄▄▄▄▄▀▄▄▄▄▄▀▄▄▄▀▄▄▄▀▄▄▄▄▄▀▄▄▄▀▀▄▄▀▀▄▄▄▀▀▄▄▄▄▄▀▄▄▄▄▀▀
+
+
+# LIBRARIES
+
+# External functions
 # Use the same function as the training data preparation function
 from CreateTrainingData import PrepImage
 
-# LIBRARIES
+# Libraries
 import cv2
 import numpy as np
 import os
@@ -20,14 +28,16 @@ import time
 from tqdm import tqdm
 import pickle
 
+# Tensorflow
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 
 
 # MAIN FUNCTION
 
-# cLASSIFY IMAGES
+# Classify images
 def ClasifyAll(name_model, dir_model, img_size, categories, dir_test, dir_output):
+  raise NotImplementedError
 
   model = load_model(os.path.join(dir_model,name_model))
   incorrect = 0
@@ -36,7 +46,7 @@ def ClasifyAll(name_model, dir_model, img_size, categories, dir_test, dir_output
     
     path = os.path.join(dir_test, image)
 
-    id,clas = ClassifyOne(model,categories,path,img_size)
+    categ,id = ClassifyOne(model,categories,path,img_size)
 
     passed = id == 0
     #colour_back = (0,255,0) if passed else (0,0,255)
@@ -51,7 +61,7 @@ def ClasifyAll(name_model, dir_model, img_size, categories, dir_test, dir_output
     number = int(image.replace(".PNG",""))
     is_pass = number > 400
     if passed != is_pass: incorrect += 1
-    print(f"Number: {number}, Correct: {is_pass==passed}, ID: {id}, Class: {clas}")
+    print(f"Number: {number}, Correct: {is_pass==passed}, ID: {id}, Class: {categ}")
 
     #print(res)
 
@@ -63,8 +73,8 @@ def ClasifyAll(name_model, dir_model, img_size, categories, dir_test, dir_output
 
 # Identify this one image
 def ClassifyOne(model, categories, path, img_size):
+  raise NotImplementedError
   image = PrepImage(path, img_size, True)
-  prediction = np.round(model.predict(image)[0][0] * (len(categories)-1))
-  result = "err"#categories[prediction]
-  return prediction,result
-
+  index = np.argmax(model.predict(image))[0]
+  categ = categories[index]
+  return categ,index
