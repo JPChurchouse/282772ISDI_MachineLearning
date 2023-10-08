@@ -24,6 +24,11 @@ output = os.path.join(cwd,"classified_images")
 
 # Lists of required directories
 dirs_required  = [categ,raw]
+dirs_required_messages = [
+  f"Direcotry required \"{os.path.split(categ)[1]}\" must contain sub-directories named with the categories and respective training images inside",
+  f"Direcotry required \"{os.path.split(raw  )[1]}\" must contain all of the images provided without any organisation"
+  ]
+
 dirs_to_create = [model,train,tboard,output]
 
 
@@ -38,6 +43,9 @@ name_categs = "categs"
 def Verify():
 
   fail = False
+
+  for msg in dirs_required_messages:
+    print(msg)
 
   for dir in dirs_to_create:
     if not os.path.exists(dir):

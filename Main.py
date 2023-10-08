@@ -53,7 +53,7 @@ def RunTests():
   Dir.Verify()
 
   # Create the training data
-  #for size in tqdm(test_imsize) : Create.CreateTrainingData(size)
+  for size in tqdm(test_imsize) : Create.CreateTrainingData(size)
 
   # Launch Tensorboard
   TB.Launch()
@@ -105,10 +105,10 @@ def main():
   print("Starting MAIN\n")
 
   # Run sequential testing
-  RunTests()
+  #RunTests()
 
   # Verify directories
-  #Dir.Verify()
+  Dir.Verify()
 
   # Launch TensorBoard
   #TB.Launch(Dir.tboard)
