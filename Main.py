@@ -5,7 +5,8 @@
 # 282772 Industrial Systems Design and Integration
 # Machine Learning Project, 2023-10-06 1800
 # 
-# adsfadsfasfd
+# This is the main file of the testing program
+# Please ensure required directories are correctly setup as per terminal instructions
 
 
 # Notes
